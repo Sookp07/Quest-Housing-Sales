@@ -26,9 +26,9 @@
             <a href="index.html">🏠 Home</a>
             <a href="units.html">🏢 Units</a>
             <a href="buyers.html">👥 Buyers</a>
-            <a href="appointments.html">📅 Appointments</a>
+            <a href="Appointments.html">📅 Appointments</a>
             <a href="announcements.html">📢 Announcements</a>
-            <a href="tools.html" class="active" aria-current="page">🧰 Buyer Tools</a>
+            <a href="Tools.html" class="active" aria-current="page">🧰 Buyer Tools</a>
             <a href="about.html">ℹ️ About</a>
             <a href="#" onclick="requestLogout(event)" class="logout" aria-label="Log out of Quest Housing Sales">🚪 Logout</a>
         </nav>
@@ -102,21 +102,22 @@
             <div id="apptWeatherResult"></div>
         </div>
 
-      <!-- State → Country Lookup -->
-<div class="form-card">
-    <h3>🗺️ State → Country Lookup</h3>
-    <div class="form-row">
-        <div class="form-group" style="flex:4;">
-            <label for="stateInput">State / Province name</label>
-            <input type="text" id="stateInput" placeholder="e.g. Selangor, California, Bavaria">
+        <!-- State → Country Lookup -->
+        <div class="form-card">
+            <h3>🗺️ State → Country Lookup</h3>
+            <div class="form-row">
+                <div class="form-group" style="flex:4;">
+                    <label for="stateInput">State / Province name</label>
+                    <input type="text" id="stateInput" placeholder="e.g. Selangor, California, Bavaria">
+                </div>
+                <div class="form-group" style="flex:0 0 auto;">
+                    <button class="btn btn-success" id="stateBtn">Look Up</button>
+                </div>
+            </div>
+            <div id="stateResult"></div>
         </div>
-        <div class="form-group" style="flex:0 0 auto;">
-            <button class="btn btn-success" id="stateBtn">Look Up</button>
-        </div>
-    </div>
-    <div id="stateResult"></div>
-</div>
 
+    </div>
 </main>
 
 <footer class="footer" role="contentinfo">
@@ -227,52 +228,51 @@
         }
     });
 
-   /* ----- State → Country Lookup ----- */
-document.getElementById('stateBtn').addEventListener('click', async () => {
-    const input = document.getElementById('stateInput');
-    const box = document.getElementById('stateResult');
-    const state = input.value.trim();
+    /* ----- State → Country Lookup ----- */
+    document.getElementById('stateBtn').addEventListener('click', async () => {
+        const input = document.getElementById('stateInput');
+        const box = document.getElementById('stateResult');
+        const state = input.value.trim();
 
-    if (!state) {
-        box.innerHTML = '<span style="color:#dc2626;">Enter a state name.</span>';
-        return;
-    }
-
-    box.innerHTML = '<em>Loading…</em>';
-
-    try {
-        const url = `/api/external/state-to-country?state=${encodeURIComponent(state)}`;
-        console.log('[state-lookup] fetching:', url);
-
-        const response = await fetch(url);
-        const data = await response.json();
-
-        console.log('[state-lookup] status:', response.status);
-        console.log('[state-lookup] body:', data);
-
-        if (!response.ok) {
-            const msg = data.error || `HTTP ${response.status}`;
-            const detail = data.detail ? ` — ${data.detail}` : '';
-            box.innerHTML = `<span style="color:#dc2626;">${msg}${detail}</span>`;
+        if (!state) {
+            box.innerHTML = '<span style="color:#dc2626;">Enter a state name.</span>';
             return;
         }
 
-        if (!data.state || !data.country) {
-            console.error('[state-lookup] unexpected shape:', data);
-            box.innerHTML = '<span style="color:#dc2626;">Unexpected response. See console.</span>';
-            return;
-        }
+        box.innerHTML = '<em>Loading…</em>';
 
-        // Display result — no esc() needed, plain string interpolation
-        box.innerHTML = `
-            🗺️ <strong>${data.state}</strong>${data.stateCode ? ` (${data.stateCode})` : ''}<br>
-            🌍 Belongs to: <strong>${data.country}</strong>${data.countryCode ? ` (${data.countryCode})` : ''}
-        `;
-    } catch (err) {
-        console.error('[state-lookup] exception:', err);
-        box.innerHTML = `<span style="color:#dc2626;">Error: ${err.message}</span>`;
-    }
-});
+        try {
+            const url = `/api/external/state-to-country?state=${encodeURIComponent(state)}`;
+            console.log('[state-lookup] fetching:', url);
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            console.log('[state-lookup] status:', response.status);
+            console.log('[state-lookup] body:', data);
+
+            if (!response.ok) {
+                const msg = data.error || `HTTP ${response.status}`;
+                const detail = data.detail ? ` — ${data.detail}` : '';
+                box.innerHTML = `<span style="color:#dc2626;">${msg}${detail}</span>`;
+                return;
+            }
+
+            if (!data.state || !data.country) {
+                console.error('[state-lookup] unexpected shape:', data);
+                box.innerHTML = '<span style="color:#dc2626;">Unexpected response. See console.</span>';
+                return;
+            }
+
+            box.innerHTML = `
+                🗺️ <strong>${data.state}</strong>${data.stateCode ? ` (${data.stateCode})` : ''}<br>
+                🌍 Belongs to: <strong>${data.country}</strong>${data.countryCode ? ` (${data.countryCode})` : ''}
+            `;
+        } catch (err) {
+            console.error('[state-lookup] exception:', err);
+            box.innerHTML = `<span style="color:#dc2626;">Error: ${err.message}</span>`;
+        }
+    });
 
 </script>
 
