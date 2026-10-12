@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Manage viewing appointments at Quest Housing Sales.">
+    <title>Appointments - Quest Housing Sales</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        if (sessionStorage.getItem('quest_logged_in') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="header" role="banner">
+    <div class="container">
+        <a href="index.html" class="logo" aria-label="Quest Housing Sales — Home">🏠 Quest Housing Sales</a>
+        <nav class="nav" aria-label="Main navigation">
+            <a href="index.html">🏠 Home</a>
+            <a href="units.html">🏢 Units</a>
+            <a href="buyers.html">👥 Buyers</a>
+            <a href="appointments.html" class="active" aria-current="page">📅 Appointments</a>
+            <a href="announcements.html">📢 Announcements</a>
+            <a href="tools.html">🧰 Buyer Tools</a>
+            <a href="about.html">ℹ️ About</a>
+            <a href="#" onclick="requestLogout(event)" class="logout" aria-label="Log out of Quest Housing Sales">🚪 Logout</a>
+        </nav>
+    </div>
+</header>
+
+<main class="main" id="main" role="main">
+    <div class="container">
+
+        <h2 class="page-title">📅 Viewing Appointments</h2>
+
+        <div class="form-card">
+            <h3 id="formTitle">➕ Schedule New Appointment</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="apptBuyer">Buyer</label>
+                    <select id="apptBuyer"><option value="">Select buyer</option></select>
+                </div>
+                <div class="form-group">
+                    <label for="apptUnit">Unit</label>
+                    <select id="apptUnit"><option value="">Select unit</option></select>
+                </div>
+                <div class="form-group">
+                    <label for="apptScheduledAt">Date &amp; Time</label>
+                    <input type="datetime-local" id="apptScheduledAt">
+                </div>
+                <div class="form-group">
+                    <label for="apptStatus">Status</label>
+                    <select id="apptStatus">
+                        <option value="Scheduled">Scheduled</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                        <option value="NoShow">No Show</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="apptNotes">Notes (optional)</label>
+                    <textarea id="apptNotes" placeholder="e.g. Buyer requested evening slot"></textarea>
+                </div>
+                <div class="form-group" style="flex:0 0 auto;">
+                    <button class="btn btn-success" id="submitBtn">➕ Schedule</button>
+                    <button class="btn btn-warning" id="cancelBtn" style="display:none;">✖ Cancel</button>
+                </div>
+            </div>
+            <input type="hidden" id="editId">
+        </div>
+
+        <div class="table-container">
+            <table>
+                <caption class="sr-only">List of viewing appointments</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Buyer</th>
+                        <th scope="col">Unit</th>
+                        <th scope="col">Location</th>
+                        <th scope="col">Scheduled</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Notes</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="apptTable" aria-live="polite">
+                    <tr><td colspan="7" class="empty">Loading appointments...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</main>
+
+<footer class="footer" role="contentinfo">
+    <div class="container">
+        <p>© 2026 <strong>Quest Housing Sales</strong></p>
+    </div>
+</footer>
+
+<!-- Weather modal -->
+<div class="confirm-backdrop" id="weatherModal" role="dialog" aria-modal="true" aria-labelledby="weatherModalTitle">
+    <div class="confirm-dialog" style="max-width: 480px;">
+        <h3 id="weatherModalTitle">🌤️ Weather Forecast</h3>
+        <div id="weatherModalBody" style="color:#475569; font-size:14px; line-height:1.7; margin-bottom:22px;">
+            Loading…
+        </div>
+        <div class="confirm-actions">
+            <button type="button" class="btn btn-primary" id="weatherClose">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Exit modal -->
+<div class="confirm-backdrop" id="exitModal" role="dialog" aria-modal="true" aria-labelledby="exitModalTitle">
+    <div class="confirm-dialog">
+        <h3 id="exitModalTitle">🚪 Confirm Exit</h3>
+        <p>Are you sure you want to log out and exit Quest Housing Sales?</p>
+        <div class="confirm-actions">
+            <button type="button" class="btn btn-warning" id="exitCancel">Cancel</button>
+            <button type="button" class="btn btn-danger" id="exitConfirm">Yes, Exit</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ----- AUTH / EXIT MODAL ----- */
+    function logout() {
+        sessionStorage.removeItem('quest_logged_in');
+        sessionStorage.removeItem('quest_user');
+    }
+    function requestLogout(e) {
+        if (e) e.preventDefault();
+        document.getElementById('exitModal').classList.add('show');
+        setTimeout(() => document.getElementById('exitConfirm').focus(), 50);
+    }
+    (function setupExitModal() {
+        const modal = document.getElementById('exitModal');
+        document.getElementById('exitCancel').addEventListener('click', () => modal.classList.remove('show'));
+        document.getElementById('exitConfirm').addEventListener('click', () => {
+            logout();
+            window.location.href = 'login.html';
+        });
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('show')) modal.classList.remove('show');
+        });
+    })();
+
+    /* ----- WEATHER MODAL ----- */
+    (function setupWeatherModal() {
+        const modal = document.getElementById('weatherModal');
+        document.getElementById('weatherClose').addEventListener('click', () => modal.classList.remove('show'));
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('show')) modal.classList.remove('show');
+        });
+    })();
+
+    /* ----- HELPERS ----- */
+    function esc(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        })[c]);
+    }
+
+    const getData    = async (url) => (await fetch(url)).json();
+    const postData   = async (url, data) => (await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })).json();
+    const putData    = async (url, data) => (await fetch(url, { method: 'PUT',  headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })).json();
+    const deleteData = async (url) => (await fetch(url, { method: 'DELETE' })).json();
+
+    let appointments = [];
+    let buyers = [];
+    let units = [];
+
+    function statusClass(status) {
+        if (status === 'Completed') return 'badge-completed';
+        if (status === 'Cancelled') return 'badge-cancelled';
+        if (status === 'NoShow')    return 'badge-noshow';
+        return 'badge-scheduled';
+    }
+
+    function showAppointments() {
+        const table = document.getElementById('apptTable');
+        if (appointments.length === 0) {
+            table.innerHTML = '<tr><td colspan="7" class="empty">No appointments yet. Schedule your first one above.</td></tr>';
+            return;
+        }
+        let html = '';
+        for (const a of appointments) {
+            const dt = a.scheduled_at ? new Date(a.scheduled_at).toLocaleString() : '—';
+            html += `<tr>
+                <td data-label="Buyer"><strong>${esc(a.buyer_name)}</strong></td>
+                <td data-label="Unit">${esc(a.unit_name)}</td>
+                <td data-label="Location">${esc(a.unit_location)}</td>
+                <td data-label="Scheduled">${dt}</td>
+                <td data-label="Status"><span class="badge ${statusClass(a.status)}">${esc(a.status)}</span></td>
+                <td data-label="Notes">${esc(a.notes || '—')}</td>
+                <td data-label="Actions">
+                    <button type="button" class="edit-btn" aria-label="Check weather for appointment with ${esc(a.buyer_name)}" onclick="checkApptWeather(${a.id})">🌤️ Weather</button>
+                    <button type="button" class="edit-btn" aria-label="Edit appointment for ${esc(a.buyer_name)}" onclick="editAppt(${a.id})">✏️ Edit</button>
+                    <button type="button" class="delete-btn" aria-label="Delete appointment for ${esc(a.buyer_name)}" onclick="deleteAppt(${a.id})">🗑️ Delete</button>
+                </td>
+            </tr>`;
+        }
+        table.innerHTML = html;
+    }
+
+    function populateDropdowns() {
+        let bOptions = '<option value="">Select buyer</option>';
+        for (const b of buyers) {
+            bOptions += `<option value="${b.id}">${esc(b.name)} (${esc(b.agent || 'Unassigned')})</option>`;
+        }
+        document.getElementById('apptBuyer').innerHTML = bOptions;
+
+        let uOptions = '<option value="">Select unit</option>';
+        for (const u of units) {
+            if (u.status !== 'Sold') {
+                uOptions += `<option value="${u.id}">${esc(u.name)} — ${esc(u.location)}</option>`;
+            }
+        }
+        document.getElementById('apptUnit').innerHTML = uOptions;
+    }
+
+    async function loadAll() {
+        try {
+            const results = await Promise.all([
+                getData('/api/appointments'),
+                getData('/api/buyers'),
+                getData('/api/units')
+            ]);
+            appointments = results[0] || [];
+            buyers = results[1] || [];
+            units = results[2] || [];
+            showAppointments();
+            populateDropdowns();
+        } catch (err) {
+            console.error('Load failed:', err);
+            document.getElementById('apptTable').innerHTML =
+                '<tr><td colspan="7" class="empty">Failed to load appointments. Check the server.</td></tr>';
+        }
+    }
+
+    document.getElementById('submitBtn').addEventListener('click', async () => {
+        const buyer_id = parseInt(document.getElementById('apptBuyer').value);
+        const unit_id = parseInt(document.getElementById('apptUnit').value);
+        const scheduled_at = document.getElementById('apptScheduledAt').value;
+        const status = document.getElementById('apptStatus').value;
+        const notes = document.getElementById('apptNotes').value.trim();
+
+        if (!buyer_id) return alert('Please select a buyer');
+        if (!unit_id) return alert('Please select a unit');
+        if (!scheduled_at) return alert('Please select date and time');
+
+        const editId = parseInt(document.getElementById('editId').value);
+
+        let res;
+        if (editId) {
+            res = await putData('/api/appointments/' + editId, { scheduled_at, status, notes });
+        } else {
+            res = await postData('/api/appointments', { buyer_id, unit_id, scheduled_at, status, notes });
+        }
+
+        if (res && res.error) {
+            return alert('Error: ' + res.error);
+        }
+
+        cancelEdit();
+        loadAll();
+    });
+
+    function editAppt(id) {
+        const a = appointments.find(x => x.id === id);
+        if (!a) return;
+        document.getElementById('apptBuyer').value = a.buyer_id;
+        document.getElementById('apptUnit').value = a.unit_id;
+
+        if (a.scheduled_at) {
+            const d = new Date(a.scheduled_at);
+            const pad = (n) => String(n).padStart(2, '0');
+            const local = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            document.getElementById('apptScheduledAt').value = local;
+        }
+
+        document.getElementById('apptStatus').value = a.status;
+        document.getElementById('apptNotes').value = a.notes || '';
+        document.getElementById('editId').value = id;
+        document.getElementById('formTitle').textContent = '✏️ Edit Appointment';
+        document.getElementById('submitBtn').textContent = '💾 Update';
+        document.getElementById('cancelBtn').style.display = 'inline-block';
+        document.querySelector('.form-card').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+        document.getElementById('apptBuyer').value = '';
+        document.getElementById('apptUnit').value = '';
+        document.getElementById('apptScheduledAt').value = '';
+        document.getElementById('apptStatus').value = 'Scheduled';
+        document.getElementById('apptNotes').value = '';
+        document.getElementById('editId').value = '';
+        document.getElementById('formTitle').textContent = '➕ Schedule New Appointment';
+        document.getElementById('submitBtn').textContent = '➕ Schedule';
+        document.getElementById('cancelBtn').style.display = 'none';
+    }
+    document.getElementById('cancelBtn').addEventListener('click', cancelEdit);
+
+    async function deleteAppt(id) {
+        const a = appointments.find(x => x.id === id);
+        if (!confirm(`Delete appointment for "${a.buyer_name}"?`)) return;
+        await deleteData('/api/appointments/' + id);
+        loadAll();
+    }
+
+    /* ----- WEATHER AT APPOINTMENT ----- */
+    async function checkApptWeather(id) {
+        const a = appointments.find(x => x.id === id);
+        if (!a || !a.scheduled_at) return alert('No scheduled time');
+
+        const modal = document.getElementById('weatherModal');
+        const body = document.getElementById('weatherModalBody');
+        body.innerHTML = 'Loading…';
+        modal.classList.add('show');
+
+        const d = new Date(a.scheduled_at);
+        const pad = (n) => String(n).padStart(2, '0');
+        const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+        try {
+            const params = new URLSearchParams({
+                location: a.unit_location,
+                date,
+                time
+            });
+            const r = await fetch('/api/external/weather-at?' + params);
+            const w = await r.json();
+
+            if (w.error) {
+                body.innerHTML = `<span style="color:#dc2626;">${esc(w.error)}</span>${w.detail ? `<br><small>${esc(w.detail)}</small>` : ''}`;
+                return;
+            }
+
+            let html = `<strong>${esc(a.buyer_name)}</strong> viewing <strong>${esc(a.unit_name)}</strong><br>`;
+            html += `📍 ${esc(w.location)} &nbsp;·&nbsp; 📅 ${esc(w.date)} at ${esc(time)}<br><br>`;
+            html += `🌡️ High <strong>${w.daily.temperature_max}°C</strong> / Low ${w.daily.temperature_min}°C<br>`;
+            html += `🌧️ ${w.daily.precipitation_sum} mm total &nbsp;(${w.daily.precipitation_probability}% chance)<br>`;
+            html += `💨 Wind up to ${w.daily.wind_speed_max} km/h`;
+
+            if (w.hourly) {
+                html += `<br><br><strong>At appointment hour:</strong><br>`;
+                html += `🌡️ ${w.hourly.temperature}°C &nbsp; `;
+                html += `🌧️ ${w.hourly.precipitation_probability}% &nbsp; `;
+                html += `💨 ${w.hourly.wind_speed} km/h`;
+            }
+
+            // Simple recommendation
+            const pp = w.hourly?.precipitation_probability ?? w.daily.precipitation_probability;
+            if (pp >= 60) {
+                html += `<br><br>⚠️ <span style="color:#d97706;">High chance of rain — consider rescheduling or advising the buyer to bring an umbrella.</span>`;
+            } else if (pp >= 30) {
+                html += `<br><br>☔ <span style="color:#d97706;">Moderate rain chance — a light umbrella may be useful.</span>`;
+            } else {
+                html += `<br><br>✅ <span style="color:#059669;">Good conditions expected for the viewing.</span>`;
+            }
+
+            body.innerHTML = html;
+        } catch (err) {
+            body.innerHTML = '<span style="color:#dc2626;">Failed to fetch weather.</span>';
+        }
+    }
+
+    loadAll();
+</script>
+
+</body>
+</html>

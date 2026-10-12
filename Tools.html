@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Buyer tools — currency conversion, weather, geolocation.">
+    <title>Buyer Tools - Quest Housing Sales</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        if (sessionStorage.getItem('quest_logged_in') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="header" role="banner">
+    <div class="container">
+        <a href="index.html" class="logo" aria-label="Quest Housing Sales — Home">🏠 Quest Housing Sales</a>
+        <nav class="nav" aria-label="Main navigation">
+            <a href="index.html">🏠 Home</a>
+            <a href="units.html">🏢 Units</a>
+            <a href="buyers.html">👥 Buyers</a>
+            <a href="appointments.html">📅 Appointments</a>
+            <a href="announcements.html">📢 Announcements</a>
+            <a href="tools.html" class="active" aria-current="page">🧰 Buyer Tools</a>
+            <a href="about.html">ℹ️ About</a>
+            <a href="#" onclick="requestLogout(event)" class="logout" aria-label="Log out of Quest Housing Sales">🚪 Logout</a>
+        </nav>
+    </div>
+</header>
+
+<main class="main" id="main" role="main">
+    <div class="container">
+
+        <h2 class="page-title">🧰 Buyer Tools</h2>
+
+        <!-- Currency Converter -->
+        <div class="form-card">
+            <h3>💱 Currency Converter</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="fxAmount">Amount</label>
+                    <input type="number" id="fxAmount" value="450000" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="fxFrom">From</label>
+                    <select id="fxFrom">
+                        <option value="USD">USD</option>
+                        <option value="MYR">MYR</option>
+                        <option value="SGD">SGD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                        <option value="JPY">JPY</option>
+                        <option value="AUD">AUD</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="fxTo">To</label>
+                    <select id="fxTo">
+                        <option value="MYR">MYR</option>
+                        <option value="USD">USD</option>
+                        <option value="SGD">SGD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                        <option value="JPY">JPY</option>
+                        <option value="AUD">AUD</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex:0 0 auto;">
+                    <button class="btn btn-success" id="fxBtn">Convert</button>
+                </div>
+            </div>
+            <div id="fxResult"></div>
+        </div>
+
+        <!-- Appointment Weather Forecast -->
+        <div class="form-card">
+            <h3>📅 Weather at Appointment Time</h3>
+            <div class="form-row">
+                <div class="form-group" style="flex:2;">
+                    <label for="apptWeatherLocation">Location</label>
+                    <input type="text" id="apptWeatherLocation" placeholder="e.g. Kuala Lumpur">
+                </div>
+                <div class="form-group">
+                    <label for="apptWeatherDate">Date</label>
+                    <input type="date" id="apptWeatherDate">
+                </div>
+                <div class="form-group">
+                    <label for="apptWeatherTime">Time (optional)</label>
+                    <input type="time" id="apptWeatherTime">
+                </div>
+                <div class="form-group" style="flex:0 0 auto;">
+                    <button class="btn btn-success" id="apptWeatherBtn">Check</button>
+                </div>
+            </div>
+            <div id="apptWeatherResult"></div>
+        </div>
+
+      <!-- State → Country Lookup -->
+<div class="form-card">
+    <h3>🗺️ State → Country Lookup</h3>
+    <div class="form-row">
+        <div class="form-group" style="flex:4;">
+            <label for="stateInput">State / Province name</label>
+            <input type="text" id="stateInput" placeholder="e.g. Selangor, California, Bavaria">
+        </div>
+        <div class="form-group" style="flex:0 0 auto;">
+            <button class="btn btn-success" id="stateBtn">Look Up</button>
+        </div>
+    </div>
+    <div id="stateResult"></div>
+</div>
+
+</main>
+
+<footer class="footer" role="contentinfo">
+    <div class="container">
+        <p>© 2026 <strong>Quest Housing Sales</strong></p>
+    </div>
+</footer>
+
+<div class="confirm-backdrop" id="exitModal" role="dialog" aria-modal="true" aria-labelledby="exitModalTitle">
+    <div class="confirm-dialog">
+        <h3 id="exitModalTitle">🚪 Confirm Exit</h3>
+        <p>Are you sure you want to log out and exit Quest Housing Sales?</p>
+        <div class="confirm-actions">
+            <button type="button" class="btn btn-warning" id="exitCancel">Cancel</button>
+            <button type="button" class="btn btn-danger" id="exitConfirm">Yes, Exit</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function logout() {
+        sessionStorage.removeItem('quest_logged_in');
+        sessionStorage.removeItem('quest_user');
+    }
+    function requestLogout(e) {
+        if (e) e.preventDefault();
+        document.getElementById('exitModal').classList.add('show');
+        setTimeout(() => document.getElementById('exitConfirm').focus(), 50);
+    }
+    (function setupExitModal() {
+        const modal = document.getElementById('exitModal');
+        document.getElementById('exitCancel').addEventListener('click', () => modal.classList.remove('show'));
+        document.getElementById('exitConfirm').addEventListener('click', () => {
+            logout();
+            window.location.href = 'login.html';
+        });
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('show')) modal.classList.remove('show');
+        });
+    })();
+
+    /* ----- Currency Converter ----- */
+    document.getElementById('fxBtn').addEventListener('click', async () => {
+        const amount = document.getElementById('fxAmount').value;
+        const from = document.getElementById('fxFrom').value;
+        const to = document.getElementById('fxTo').value;
+        const box = document.getElementById('fxResult');
+        box.innerHTML = '<em>Loading…</em>';
+        try {
+            const r = await fetch(`/api/external/convert?amount=${amount}&from=${from}&to=${to}`);
+            const d = await r.json();
+            if (d.error) { box.innerHTML = `<span style="color:#dc2626;">${d.error}</span>`; return; }
+            box.innerHTML = `<strong>${Number(d.amount).toLocaleString()} ${d.from}</strong> = <strong>${Number(d.converted).toLocaleString()} ${d.to}</strong><br><small>Rate: 1 ${d.from} = ${Number(d.rate).toFixed(4)} ${d.to} (${d.date})</small>`;
+        } catch (err) {
+            box.innerHTML = `<span style="color:#dc2626;">Failed to convert.</span>`;
+        }
+    });
+
+    /* ----- Appointment Weather ----- */
+    document.getElementById('apptWeatherDate').value = new Date().toISOString().slice(0, 10);
+
+    document.getElementById('apptWeatherBtn').addEventListener('click', async () => {
+        const location = document.getElementById('apptWeatherLocation').value.trim();
+        const date = document.getElementById('apptWeatherDate').value;
+        const time = document.getElementById('apptWeatherTime').value;
+        const box = document.getElementById('apptWeatherResult');
+
+        if (!location) { box.innerHTML = '<span style="color:#dc2626;">Enter a location.</span>'; return; }
+        if (!date) { box.innerHTML = '<span style="color:#dc2626;">Select a date.</span>'; return; }
+
+        box.innerHTML = '<em>Loading…</em>';
+        try {
+            const params = new URLSearchParams({ location, date });
+            if (time) params.append('time', time);
+
+            const r = await fetch(`/api/external/weather-at?${params}`);
+            const d = await r.json();
+
+            if (d.error) {
+                box.innerHTML = `<span style="color:#dc2626;">${d.error}${d.detail ? ' — ' + d.detail : ''}</span>`;
+                return;
+            }
+
+            const daily = d.daily;
+            let html = `<strong>${d.location}</strong> — ${d.date}<br>`;
+            html += `🌡️ High ${daily.temperature_max}°C / Low ${daily.temperature_min}°C<br>`;
+            html += `🌧️ Precipitation: ${daily.precipitation_sum}mm (${daily.precipitation_probability}% chance)<br>`;
+            html += `💨 Wind: ${daily.wind_speed_max} km/h`;
+
+            if (d.hourly) {
+                html += `<br><br><strong>At ${time}:</strong><br>`;
+                html += `🌡️ ${d.hourly.temperature}°C &nbsp; 🌧️ ${d.hourly.precipitation_probability}% &nbsp; 💨 ${d.hourly.wind_speed} km/h`;
+            }
+
+            const pp = d.hourly?.precipitation_probability ?? daily.precipitation_probability;
+            if (pp >= 60) {
+                html += `<br><br>⚠️ <span style="color:#d97706;">High chance of rain — advise the buyer to bring an umbrella.</span>`;
+            } else if (pp >= 30) {
+                html += `<br><br>☔ <span style="color:#d97706;">Moderate rain chance — a light umbrella may help.</span>`;
+            } else {
+                html += `<br><br>✅ <span style="color:#059669;">Good conditions expected.</span>`;
+            }
+
+            box.innerHTML = html;
+        } catch (err) {
+            box.innerHTML = '<span style="color:#dc2626;">Failed to fetch forecast.</span>';
+        }
+    });
+
+   /* ----- State → Country Lookup ----- */
+document.getElementById('stateBtn').addEventListener('click', async () => {
+    const input = document.getElementById('stateInput');
+    const box = document.getElementById('stateResult');
+    const state = input.value.trim();
+
+    if (!state) {
+        box.innerHTML = '<span style="color:#dc2626;">Enter a state name.</span>';
+        return;
+    }
+
+    box.innerHTML = '<em>Loading…</em>';
+
+    try {
+        const url = `/api/external/state-to-country?state=${encodeURIComponent(state)}`;
+        console.log('[state-lookup] fetching:', url);
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        console.log('[state-lookup] status:', response.status);
+        console.log('[state-lookup] body:', data);
+
+        if (!response.ok) {
+            const msg = data.error || `HTTP ${response.status}`;
+            const detail = data.detail ? ` — ${data.detail}` : '';
+            box.innerHTML = `<span style="color:#dc2626;">${msg}${detail}</span>`;
+            return;
+        }
+
+        if (!data.state || !data.country) {
+            console.error('[state-lookup] unexpected shape:', data);
+            box.innerHTML = '<span style="color:#dc2626;">Unexpected response. See console.</span>';
+            return;
+        }
+
+        // Display result — no esc() needed, plain string interpolation
+        box.innerHTML = `
+            🗺️ <strong>${data.state}</strong>${data.stateCode ? ` (${data.stateCode})` : ''}<br>
+            🌍 Belongs to: <strong>${data.country}</strong>${data.countryCode ? ` (${data.countryCode})` : ''}
+        `;
+    } catch (err) {
+        console.error('[state-lookup] exception:', err);
+        box.innerHTML = `<span style="color:#dc2626;">Error: ${err.message}</span>`;
+    }
+});
+
+</script>
+
+</body>
+</html>

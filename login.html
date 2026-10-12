@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Quest Housing Sales</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="login-page">
+
+    <div class="login-box">
+        <h1>Quest Housing Sales</h1>
+        <p class="subtitle">Sign in to access the management system</p>
+
+        <div class="login-error" id="errorMsg"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter username" required autocomplete="username">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter password" required autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Sign In</button>
+            <div style="text-align: center; margin-top: 12px;">
+            <a href="forgot-password.html" style="color: #2d3e5f; font-size: 13px;">Forgot password?</a>
+        </div>
+        </form>
+
+        <div class="login-footer">
+            Don't have an account? <a href="signup.html">Sign Up</a>
+            <br><br>
+            © 2026 Quest Housing Sales
+        </div>
+    </div>
+
+</div>
+
+<script>
+    if (sessionStorage.getItem('quest_logged_in') === 'true') {
+        window.location.href = 'index.html';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const errorMsg = document.getElementById('errorMsg');
+
+        errorMsg.classList.remove('show');
+
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                errorMsg.textContent = data.error || 'Login failed';
+                errorMsg.classList.add('show');
+                document.getElementById('password').value = '';
+                document.getElementById('password').focus();
+                return;
+            }
+
+            sessionStorage.setItem('quest_logged_in', 'true');
+            sessionStorage.setItem('quest_user', data.username);
+            window.location.href = 'index.html';
+
+        } catch (error) {
+            errorMsg.textContent = 'Server error. Please try again.';
+            errorMsg.classList.add('show');
+        }
+    });
+</script>
+
+</body>
+</html>

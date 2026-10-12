@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Quest Housing Sales</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        if (sessionStorage.getItem('quest_logged_in') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="header">
+    <div class="container">
+        <a href="index.html" class="logo">🏠 Quest Housing Sales</a>
+        <nav class="nav">
+            <a href="index.html">🏠 Home</a>
+            <a href="units.html">🏢 Units</a>
+            <a href="buyers.html">👥 Buyers</a>
+            <a href="appointments.html">📅 Appointments</a>
+            <a href="announcements.html">📢 Announcements</a>
+            <a href="tools.html">🧰 Buyer Tools</a>
+            <a href="about.html" class="active">ℹ️ About</a>
+            <a href="#" onclick="requestLogout(event)" class="logout">🚪 Logout</a>
+        </nav>
+    </div>
+</header>
+
+<main class="main" id="main">
+    <div class="container">
+
+        <h2 class="page-title">ℹ️ About Quest Housing Sales</h2>
+
+        <div class="about-card">
+            <h3>👋 Welcome to Quest Housing Sales</h3>
+            <p>Quest Housing Sales is a premier housing development company committed to creating exceptional living spaces. Our communities are designed with modern families in mind, featuring sustainable construction and access to premium amenities.</p>
+        </div>
+
+        <div class="about-card">
+            <h3>💼 What We Do</h3>
+            <p>Quest Housing Sales specializes in connecting buyers with their ideal properties. We provide end-to-end services including property listings, buyer management, viewing coordination, and sales tracking.</p>
+            <ul>
+                <li><strong>🏢 Property Listings</strong> — Manage and showcase available units</li>
+                <li><strong>👥 Buyer Management</strong> — Track buyer profiles and preferences</li>
+                <li><strong>📅 Viewing Coordination</strong> — Schedule and organize property viewings</li>
+                <li><strong>📊 Sales Tracking</strong> — Monitor transactions and inventory in real time</li>
+            </ul>
+        </div>
+
+        <div class="about-card">
+            <h3>🏘️ Property Types</h3>
+            <ul>
+                <li><strong>Condo</strong> — Modern apartments with amenities</li>
+                <li><strong>Landed House</strong> — Freehold property with land</li>
+                <li><strong>Terrace House</strong> — Connected homes in rows</li>
+                <li><strong>Townhouse</strong> — Multi-level homes</li>
+                <li><strong>Semi-Detached</strong> — Two homes sharing one wall</li>
+                <li><strong>Bungalow</strong> — Single-story detached home</li>
+            </ul>
+        </div>
+
+        <div class="about-card">
+            <h3>📞 Contact Us</h3>
+            <p>📱 <strong>Phone:</strong> (555) 123-4567</p>
+            <p>✉️ <strong>Email:</strong> info@questhousing.com</p>
+            <p>📍 <strong>Address:</strong> 123 Dream Street, Haven City</p>
+            <p>🕐 <strong>Hours:</strong> Monday - Friday, 9:00am - 6:00pm</p>
+        </div>
+
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <p>© 2026 <strong>Quest Housing Sales</strong></p>
+    </div>
+</footer>
+
+<!-- Exit confirmation modal -->
+<div class="confirm-backdrop" id="exitModal" role="dialog" aria-modal="true" aria-labelledby="exitModalTitle">
+    <div class="confirm-dialog">
+        <h3 id="exitModalTitle">🚪 Confirm Exit</h3>
+        <p>Are you sure you want to log out and exit Quest Housing Sales?</p>
+        <div class="confirm-actions">
+            <button type="button" class="btn btn-warning" id="exitCancel">Cancel</button>
+            <button type="button" class="btn btn-danger" id="exitConfirm">Yes, Exit</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function logout() {
+        sessionStorage.removeItem('quest_logged_in');
+        sessionStorage.removeItem('quest_user');
+    }
+
+    function requestLogout(e) {
+        if (e) e.preventDefault();
+        document.getElementById('exitModal').classList.add('show');
+        setTimeout(() => document.getElementById('exitConfirm').focus(), 50);
+    }
+
+    (function setupExitModal() {
+        const modal = document.getElementById('exitModal');
+        const cancelBtn = document.getElementById('exitCancel');
+        const confirmBtn = document.getElementById('exitConfirm');
+
+        cancelBtn.addEventListener('click', () => {
+            modal.classList.remove('show');
+        });
+
+        confirmBtn.addEventListener('click', () => {
+            logout();
+            window.location.href = 'login.html';
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.classList.remove('show');
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('show')) {
+                modal.classList.remove('show');
+            }
+        });
+    })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Quest Housing Sales — manage units, buyers, and viewing appointments.">
+    <title>Home - Quest Housing Sales</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        if (sessionStorage.getItem('quest_logged_in') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="header" role="banner">
+    <div class="container">
+        <a href="index.html" class="logo" aria-label="Quest Housing Sales — Home">🏠 Quest Housing Sales</a>
+        <nav class="nav" aria-label="Main navigation">
+            <a href="index.html" class="active" aria-current="page">🏠 Home</a>
+            <a href="units.html">🏢 Units</a>
+            <a href="buyers.html">👥 Buyers</a>
+            <a href="appointments.html">📅 Appointments</a>
+            <a href="announcements.html">📢 Announcements</a>
+            <a href="tools.html">🧰 Buyer Tools</a>
+            <a href="about.html">ℹ️ About</a>
+            <a href="#" onclick="requestLogout(event)" class="logout" aria-label="Log out of Quest Housing Sales">🚪 Logout</a>
+        </nav>
+    </div>
+</header>
+
+<main class="main" id="main" role="main">
+    <div class="container">
+
+        <h2 class="page-title">📊 Sales Overview</h2>
+        <section class="stats" aria-label="Key statistics">
+            <div class="stat-card">
+                <div class="label">Available</div>
+                <div class="number" id="availableCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Sold</div>
+                <div class="number" id="soldCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Buyers</div>
+                <div class="number" id="buyerCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Viewings</div>
+                <div class="number" id="viewingCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Appointments</div>
+                <div class="number" id="apptCount">0</div>
+            </div>
+        </section>
+
+        <h2 class="page-title">🏢 Property Units</h2>
+
+        <!-- Currency switcher -->
+        <div class="currency-switcher">
+            <label for="homeDisplayCurrency">💱 Display prices in</label>
+            <select id="homeDisplayCurrency">
+                <option value="USD">USD — US Dollar</option>
+                <option value="MYR">MYR — Malaysian Ringgit</option>
+                <option value="SGD">SGD — Singapore Dollar</option>
+                <option value="EUR">EUR — Euro</option>
+                <option value="GBP">GBP — British Pound</option>
+                <option value="JPY">JPY — Japanese Yen</option>
+                <option value="AUD">AUD — Australian Dollar</option>
+            </select>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <caption class="sr-only">List of property units</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Unit</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Location</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Price</th>
+                    </tr>
+                </thead>
+                <tbody id="unitTable" aria-live="polite">
+                    <tr><td colspan="5" class="empty">Loading units...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="page-title">📢 Announcements</h2>
+        <div id="announceList" aria-live="polite" aria-atomic="false">
+            <span class="empty">Loading announcements...</span>
+        </div>
+
+    </div>
+</main>
+
+<footer class="footer" role="contentinfo">
+    <div class="container">
+        <p>© 2026 <strong>Quest Housing Sales</strong> — New Housing Sales &amp; Buyer Management System</p>
+    </div>
+</footer>
+
+<div class="confirm-backdrop" id="exitModal" role="dialog" aria-modal="true" aria-labelledby="exitModalTitle">
+    <div class="confirm-dialog">
+        <h3 id="exitModalTitle">🚪 Confirm Exit</h3>
+        <p>Are you sure you want to log out and exit Quest Housing Sales?</p>
+        <div class="confirm-actions">
+            <button type="button" class="btn btn-warning" id="exitCancel">Cancel</button>
+            <button type="button" class="btn btn-danger" id="exitConfirm">Yes, Exit</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ----- AUTH / MODAL ----- */
+    function logout() {
+        sessionStorage.removeItem('quest_logged_in');
+        sessionStorage.removeItem('quest_user');
+    }
+    function requestLogout(e) {
+        if (e) e.preventDefault();
+        document.getElementById('exitModal').classList.add('show');
+        setTimeout(() => document.getElementById('exitConfirm').focus(), 50);
+    }
+    (function setupExitModal() {
+        const modal = document.getElementById('exitModal');
+        document.getElementById('exitCancel').addEventListener('click', () => modal.classList.remove('show'));
+        document.getElementById('exitConfirm').addEventListener('click', () => {
+            logout();
+            window.location.href = 'login.html';
+        });
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('show')) modal.classList.remove('show');
+        });
+    })();
+
+    /* ----- XSS SAFETY ----- */
+    function esc(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        })[c]);
+    }
+
+    /* ----- CURRENCY ----- */
+    const CURRENCY_SYMBOLS = {
+        USD: '$', MYR: 'RM', SGD: 'S$', EUR: '€',
+        GBP: '£', JPY: '¥', AUD: 'A$'
+    };
+    let displayCurrency = localStorage.getItem('quest_display_currency') || 'USD';
+    let homeRates = {};
+
+    function fmt(amount, currency) {
+        const sym = CURRENCY_SYMBOLS[currency] || currency + ' ';
+        const decimals = currency === 'JPY' ? 0 : 2;
+        return sym + Number(amount).toLocaleString(undefined, {
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals
+        });
+    }
+
+    async function fetchHomeRate(from, to) {
+        if (from === to) return 1;
+        const key = `${from}-${to}`;
+        if (homeRates[key]) return homeRates[key];
+        try {
+            const r = await fetch(`/api/external/convert-batch?from=${from}&to=${to}`);
+            const d = await r.json();
+            if (d.rate) { homeRates[key] = d.rate; return d.rate; }
+        } catch (err) { console.error(err); }
+        return null;
+    }
+
+    /* ----- LOAD STATS ----- */
+    async function loadStats() {
+        try {
+            const response = await fetch('/api/stats');
+            const stats = await response.json();
+            document.getElementById('availableCount').textContent = stats.available || 0;
+            document.getElementById('soldCount').textContent = stats.sold || 0;
+            document.getElementById('buyerCount').textContent = stats.buyers || 0;
+            document.getElementById('viewingCount').textContent = stats.viewings || 0;
+            document.getElementById('apptCount').textContent = stats.appointments || 0;
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    /* ----- LOAD UNITS ----- */
+    async function loadUnits() {
+        try {
+            const response = await fetch('/api/units');
+            const units = await response.json();
+            const table = document.getElementById('unitTable');
+
+            if (units.length === 0) {
+                table.innerHTML = '<tr><td colspan="5" class="empty">No units yet.</td></tr>';
+                return;
+            }
+
+            const currencies = [...new Set(units.map(u => u.currency || 'USD'))];
+            for (const c of currencies) await fetchHomeRate(c, displayCurrency);
+
+            let html = '';
+            for (let i = 0; i < units.length; i++) {
+                const u = units[i];
+                let statusClass = 'badge-available';
+                if (u.status === 'Sold') statusClass = 'badge-sold';
+                const image = u.image_data || '';
+
+                const baseCurrency = u.currency || 'USD';
+                const rate = baseCurrency === displayCurrency ? 1 : homeRates[`${baseCurrency}-${displayCurrency}`];
+                const displayPrice = rate ? fmt(u.price * rate, displayCurrency) : '—';
+                const baseLine = baseCurrency !== displayCurrency
+                    ? `<small>(${fmt(u.price, baseCurrency)} in ${baseCurrency})</small>`
+                    : '';
+
+                html += `<tr>
+                    <td data-label="Unit">
+                        <span class="unit-name" onclick="toggleImage(${u.id})" role="button" tabindex="0"
+                              onkeydown="if(event.key==='Enter')toggleImage(${u.id})"
+                              aria-label="Show photo of ${esc(u.name)}">
+                            ${esc(u.name)}
+                        </span>
+                    </td>
+                    <td data-label="Type">${esc(u.type)}</td>
+                    <td data-label="Location">${esc(u.location)}</td>
+                    <td data-label="Status"><span class="badge ${statusClass}">${esc(u.status)}</span></td>
+                    <td data-label="Price" class="price-cell">${displayPrice}${baseLine}</td>
+                </tr>`;
+
+                if (image) {
+                    html += `<tr class="unit-image-row" id="imageRow-${u.id}">
+                        <td colspan="5">
+                            <img src="${image}" alt="Photo of ${esc(u.name)}, a ${esc(u.type)} in ${esc(u.location)}">
+                            <div class="preview-label">
+                                <strong>${esc(u.name)}</strong> — ${esc(u.type)}<br>
+                                📍 ${esc(u.location)} &nbsp;|&nbsp; 💰 ${displayPrice} &nbsp;|&nbsp; <span class="badge ${statusClass}">${esc(u.status)}</span>
+                            </div>
+                        </td>
+                    </tr>`;
+                }
+            }
+            table.innerHTML = html;
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    function toggleImage(id) {
+        document.querySelectorAll('.unit-image-row.open').forEach(row => {
+            if (row.id !== 'imageRow-' + id) row.classList.remove('open');
+        });
+        const row = document.getElementById('imageRow-' + id);
+        if (!row) return;
+        row.classList.toggle('open');
+    }
+
+    /* ----- LOAD ANNOUNCEMENTS ----- */
+    async function loadAnnouncements() {
+        try {
+            const response = await fetch('/api/announcements');
+            const announcements = await response.json();
+            const list = document.getElementById('announceList');
+
+            if (announcements.length === 0) {
+                list.innerHTML = '<span class="empty">No announcements yet.</span>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < announcements.length; i++) {
+                const a = announcements[i];
+                html += `<div class="announcement-item">
+                    <span>📢 ${esc(a.text)}</span>
+                </div>`;
+            }
+            list.innerHTML = html;
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    /* ----- DISPLAY CURRENCY SWITCHER ----- */
+    document.getElementById('homeDisplayCurrency').value = displayCurrency;
+    document.getElementById('homeDisplayCurrency').addEventListener('change', async (e) => {
+        displayCurrency = e.target.value;
+        localStorage.setItem('quest_display_currency', displayCurrency);
+        homeRates = {};
+        await loadUnits();
+    });
+
+    loadStats();
+    loadUnits();
+    loadAnnouncements();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Quest Housing Sales</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="login-page">
+
+    <div class="login-box">
+        <h1>Create Account</h1>
+        <p class="subtitle">Sign up for Quest Housing Sales</p>
+
+        <div class="login-error" id="errorMsg"></div>
+        <div class="login-success" id="successMsg"></div>
+
+        <form id="signupForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Choose a username (min 3 chars)" required autocomplete="username" minlength="3">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Create a password (min 6 chars)" required autocomplete="new-password" minlength="6">
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" placeholder="Confirm your password" required autocomplete="new-password" minlength="6">
+            </div>
+
+            <div class="form-group">
+                <label for="dob">Date of Birth</label>
+                <input type="date" id="dob" required autocomplete="bday">
+                <small style="color:#64748b; font-size:12px; display:block; margin-top:4px;">
+            </small>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Sign Up</button>
+        </form>
+
+        <div class="login-footer">
+            Already have an account? <a href="login.html">Sign In</a>
+            <br><br>
+            © 2026 Quest Housing Sales
+        </div>
+    </div>
+
+</div>
+
+<script>
+    document.getElementById('signupForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const dob = document.getElementById('dob').value;
+        const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
+
+        errorMsg.classList.remove('show');
+        successMsg.classList.remove('show');
+
+            if (username.length < 3) {
+              errorMsg.textContent = 'Username must be at least 3 characters';
+              errorMsg.classList.add('show');
+              return;
+            }
+
+        if (password.length < 6) {
+            errorMsg.textContent = 'Password must be at least 6 characters';
+            errorMsg.classList.add('show');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            errorMsg.textContent = 'Passwords do not match';
+            errorMsg.classList.add('show');
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('confirmPassword').focus();
+        return;
+        }
+
+        if (!dob) {
+            errorMsg.textContent = 'Please enter your date of birth';
+            errorMsg.classList.add('show');
+        return;
+            }
+
+        try {
+            const response = await fetch('/api/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password, date_of_birth: dob })
+    });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                errorMsg.textContent = data.error || 'Sign up failed';
+                errorMsg.classList.add('show');
+                return;
+            }
+
+            successMsg.textContent = 'Account created! Redirecting to login...';
+            successMsg.classList.add('show');
+
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 1500);
+
+        } catch (error) {
+            errorMsg.textContent = 'Server error. Please try again.';
+            errorMsg.classList.add('show');
+        }
+    });
+</script>
+
+</body>
+</html>
